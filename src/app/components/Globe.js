@@ -35,9 +35,17 @@ class Globe extends Component {
     this.animationId = requestAnimationFrame(spin.bind(this))
   }
 
-  componentWillUnmount () {
+  stopAnimate () {
     cancelAnimationFrame(this.animationId)
     this.looping = false
+  }
+
+  onMouseMove (e) {
+    console.log(e)
+  }
+
+  componentWillUnmount () {
+    this.stopAnimate()
   }
 
   render () {
@@ -45,7 +53,7 @@ class Globe extends Component {
     let { texture } = this.props
 
     return (
-      <Object3D quaternion={quaternion} position={vector}>
+      <Object3D quaternion={quaternion} position={vector} onMouseMove3D={this.onMouseMove.bind(this)}>
         <Mesh position={vector} geometry={geometry} material={new MeshBasicMaterial( {map: texture, wireframe: false } )} />
       </Object3D>
     )

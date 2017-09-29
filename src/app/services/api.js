@@ -16,6 +16,6 @@ function call (method, path, data) {
   })
 }
 
-export function getMap (seed) {
-  return call('GET', seed || '')
+export function getMap (params) {
+  return call('POST', '', params)
 }

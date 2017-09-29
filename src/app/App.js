@@ -15,7 +15,10 @@ class App extends Component{
       high: null,
       projected: true,
       pending: false,
-      seed: ''
+      seed: '',
+      iterations: 200,
+      randWidth: false,
+      width: ''
     }
   }
 
@@ -26,7 +29,7 @@ class App extends Component{
   colorGen (low, high) {
     return (v) => {
       let ratio = (v - low)/ (high -low)
-      if (ratio > 0.9) { return [255, 255, 255] } // white
+      if (ratio > 0.92) { return [255, 255, 255] } // white
       else if (ratio > 0.8) { return [50, 50, 50] } // grey
 
       else if (ratio < 0.6) { return [0, 120, 255] } // blue
@@ -55,9 +58,13 @@ class App extends Component{
   }
 
   generate (e) {
-    if (!this.state.pending) {
+    e && e.preventDefault()
+
+    let {seed, iterations, width, randWidth, pending} = this.state
+    if (!pending) {
       this.setState({pending: true})
-      getMap(this.state.seed).then(result => {
+      width = randWidth ? 'random' : width
+      getMap({seed, iterations, width}).then(result => {
         let texture = this.createTexture(result)
         this.setState({texture, low: result.low, high: result.high, pending: false})
       })
@@ -66,12 +73,19 @@ class App extends Component{
   }
 
   render() {
-    let {texture, projected, pending, seed} = this.state
+    let {texture, projected, pending, seed, iterations, width, randWidth} = this.state
 
     return (
       <div>
         <div>
-          <input type="number" value={seed} onChange={(e) => {this.setState({seed: parseInt(e.target.value)})}} /> <button disabled={pending} onClick={this.generate.bind(this)}>{pending ? 'Loading...' : 'Generate!'}</button>
+          <form onSubmit={this.generate.bind(this)} >
+          Seed: <input type="number" value={seed} onChange={(e) => {this.setState({seed: parseInt(e.target.value)})}} />
+          Iterations: <input type="number" value={iterations} onChange={(e) => {this.setState({iterations: parseInt(e.target.value)})}} />
+          Random width ? <input type="checkbox" selected={randWidth} onClick={() => {this.setState({randWidth: !randWidth})}}/>
+          Width: <input disabled={randWidth} type="number" min={90} max={270} value={width} onChange={(e) => {this.setState({width: parseInt(e.target.value)})}} />
+          <br />
+          <button disabled={pending} type="submit">{pending ? 'Loading...' : 'Generate!'}</button>
+          </form>
           <br />
           Project? <input type="checkbox" selected={projected} onClick={() => {this.setState({projected: !projected})}}/>
         </div>
