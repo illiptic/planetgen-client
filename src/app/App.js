@@ -14,6 +14,7 @@ class App extends Component{
       low: null,
       high: null,
       projected: true,
+      offset: 0,
       pending: false,
       seed: '',
       iterations: 200,
@@ -38,17 +39,19 @@ class App extends Component{
     }
   }
 
-  createTexture ({map, low, high}) {
+  createTexture ({map, low, high}, offset = 0) {
     let h = _.keys(map).length
     let w = _.keys(map[0]).length
 
-    let data = new Uint8Array(w*h*3)
+    let data = new Uint8Array(h*w*3)
 
     let color = this.colorGen(low, high)
     let index = 0
     _.forEach(map, (T, p) => {
+      let rowIndex = p * w
       _.forEach(T, (v, t) => {
-        [data[index], data[index+1], data[index+2]] = color(v)
+        let idx = (rowIndex + ((t + offset) % w))*3;
+        [data[idx], data[idx+1], data[idx+2]] = color(v)
         index += 3
       })
     })
@@ -60,20 +63,28 @@ class App extends Component{
   generate (e) {
     e && e.preventDefault()
 
-    let {seed, iterations, width, randWidth, pending} = this.state
+    let {seed, iterations, width, randWidth, pending, offset} = this.state
     if (!pending) {
       this.setState({pending: true})
       width = randWidth ? 'random' : width
       getMap({seed, iterations, width}).then(result => {
-        let texture = this.createTexture(result)
-        this.setState({texture, low: result.low, high: result.high, pending: false})
+        let texture = this.createTexture(result, offset)
+        this.setState({map: result.map, texture, low: result.low, high: result.high, pending: false})
       })
     }
 
   }
 
+  onOffsetChange (e) {
+    let offset = ((parseInt(e.target.value) || 0) + 360) % 360
+
+    let texture = this.createTexture(this.state, offset)
+
+    this.setState({offset, texture})
+  }
+
   render() {
-    let {texture, projected, pending, seed, iterations, width, randWidth} = this.state
+    let {texture, projected, offset, pending, seed, iterations, width, randWidth} = this.state
 
     return (
       <div>
@@ -88,6 +99,7 @@ class App extends Component{
           </form>
           <br />
           Project? <input type="checkbox" selected={projected} onClick={() => {this.setState({projected: !projected})}}/>
+          Offset <input type="number" value={offset} min={-10} max={360} step={10} onChange={this.onOffsetChange.bind(this)} />
         </div>
         {
           texture ? <World width={800} height={600} texture={texture} projected={projected}/> : <div>Loading</div>

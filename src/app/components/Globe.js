@@ -7,11 +7,13 @@ import {Vector3, Quaternion, SphereGeometry, PlaneGeometry, MeshBasicMaterial, E
 const geometry = new SphereGeometry(200,32,32)
 const vector = new Vector3(0,0,0)
 
+const quaternion = new Quaternion()
+
 class Globe extends Component {
   constructor (props) {
     super(props)
     this.state = {
-      quaternion: new Quaternion()
+      rotationangle: 0
     }
   }
 
@@ -21,10 +23,11 @@ class Globe extends Component {
 
   animate () {
     function spin(t) {
-      let {quaternion} = this.state
-      let rotationangle = t * 0.0001
-      quaternion.setFromEuler(new Euler(0, rotationangle))
-      this.setState({quaternion})
+      if (!this.props.dragging) {
+        let {rotationangle} = this.state
+        rotationangle += 0.005
+        this.setState({rotationangle})
+      }
 
       if (this.looping) {
         this.animationId = requestAnimationFrame(spin.bind(this))
@@ -40,20 +43,18 @@ class Globe extends Component {
     this.looping = false
   }
 
-  onMouseMove (e) {
-    console.log(e)
-  }
-
   componentWillUnmount () {
     this.stopAnimate()
   }
 
   render () {
-    let {quaternion} = this.state
-    let { texture } = this.props
+    let { rotationangle } = this.state
+    let { texture, dragging, rotation } = this.props
+
+    quaternion.setFromEuler(new Euler(0, rotationangle + rotation))
 
     return (
-      <Object3D quaternion={quaternion} position={vector} onMouseMove3D={this.onMouseMove.bind(this)}>
+      <Object3D quaternion={quaternion} position={vector}>
         <Mesh position={vector} geometry={geometry} material={new MeshBasicMaterial( {map: texture, wireframe: false } )} />
       </Object3D>
     )
