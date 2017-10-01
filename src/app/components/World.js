@@ -1,7 +1,6 @@
-import _ from 'lodash'
 import React, { Component } from 'react'
 import {Renderer, Scene, PerspectiveCamera, Object3D, Mesh, AmbientLight} from 'react-three'
-import {Vector2, Vector3, Quaternion, SphereGeometry, PlaneGeometry, MeshBasicMaterial, Euler, RepeatWrapping} from 'three'
+import {Vector3, Quaternion, PlaneGeometry, MeshBasicMaterial} from 'three'
 
 import Globe from './Globe.js'
 

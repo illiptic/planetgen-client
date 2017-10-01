@@ -1,7 +1,6 @@
-import _ from 'lodash'
 import React, { Component } from 'react'
-import {Renderer, Scene, PerspectiveCamera, Object3D, Mesh, AmbientLight} from 'react-three'
-import {Vector3, Quaternion, SphereGeometry, PlaneGeometry, MeshBasicMaterial, Euler, DataTexture, RGBFormat, UnsignedByteType} from 'three'
+import {Object3D, Mesh} from 'react-three'
+import {Vector3, Quaternion, SphereGeometry, MeshBasicMaterial, Euler} from 'three'
 
 
 const geometry = new SphereGeometry(200,32,32)
@@ -22,7 +21,7 @@ class Globe extends Component {
   }
 
   animate () {
-    function spin(t) {
+    function spin() {
       if (!this.props.dragging) {
         let {rotationangle} = this.state
         rotationangle += 0.005
@@ -49,7 +48,7 @@ class Globe extends Component {
 
   render () {
     let { rotationangle } = this.state
-    let { texture, dragging, rotation } = this.props
+    let { texture, rotation } = this.props
 
     quaternion.setFromEuler(new Euler(0, rotationangle + rotation))
 
