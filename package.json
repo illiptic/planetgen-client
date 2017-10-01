@@ -2,7 +2,7 @@
   "name": "planetgen-client",
   "version": "1.0.0",
   "description": "client for map generator",
-  "repository": "none yet",
+  "repository": "git@github.com:illiptic/planetgen-client.git",
   "main": "index.js",
   "author": "illiptic",
   "license": "MIT",
