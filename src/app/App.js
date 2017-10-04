@@ -1,7 +1,12 @@
 import React, { Component } from 'react'
 import {DataTexture, RGBFormat, UnsignedByteType} from 'three'
+import { Layout, Button, Avatar } from 'antd'
+const { Header, Content, Footer, Sider } = Layout
 
-import Slider from './components/Slider.js'
+import _ from 'lodash'
+
+import GenerationForm from './components/GenerationForm.js'
+import RenderForm from './components/RenderForm.js'
 import World from './components/World.js'
 
 import {getMap} from './services/api.js'
@@ -18,16 +23,12 @@ class App extends Component{
       offset: 0,
       greyscale: false,
       sealevel: 60,
-      pending: false,
-      seed: '',
-      iterations: 200,
-      randWidth: false,
-      width: ''
+      pending: false
     }
   }
 
   componentDidMount () {
-    this.generate()
+    this.generate({})
   }
 
   colorGen (low, high, sealevel, greyscale) {
@@ -72,13 +73,10 @@ class App extends Component{
     return texture
   }
 
-  generate (e) {
-    e && e.preventDefault()
-
-    let {seed, iterations, width, randWidth, pending, offset, sealevel, greyscale} = this.state
+  generate ({seed, iterations, width}) {
+    let {pending, offset, sealevel, greyscale} = this.state
     if (!pending) {
       this.setState({pending: true})
-      width = randWidth ? 'random' : width
       getMap({seed, iterations, width}).then(result => {
         let texture = this.createTexture(result, offset, sealevel, greyscale)
         this.setState({map: result.map, texture, low: result.low, high: result.high, pending: false})
@@ -86,57 +84,78 @@ class App extends Component{
     }
   }
 
-  onSealevelChange (sealevel) {
-    let {greyscale, offset} = this.state
-    let texture = this.createTexture(this.state, offset, sealevel, greyscale)
-    this.setState({sealevel, texture})
+  onRenderOptionChange (changes) {
+    let {greyscale, sealevel, offset} = _.merge(this.state, changes)
+
+    if (Object.keys(changes)[0] !== 'projected') {
+      let texture = this.createTexture(this.state, offset, sealevel, greyscale)
+      this.setState({texture, ...changes})
+    }
+    this.setState(changes)
   }
 
-  onGreyScaleToggle () {
-    let {greyscale, sealevel, offset} = this.state
-    greyscale = !greyscale
-    let texture = this.createTexture(this.state, offset, sealevel, greyscale)
-    this.setState({greyscale, texture})
-  }
+  titleStyle (collapsed) {
+    let style = {
+      transition: 'all 0.1s linear'
+    }
 
-  onOffsetChange (e) {
-    let {greyscale, sealevel} = this.state
-    let offset = ((parseInt(e.target.value) || 0) + 360) % 360
-    let texture = this.createTexture(this.state, offset, sealevel, greyscale)
-    this.setState({offset, texture})
+    if (collapsed) {
+      style.transform = 'rotate(-90deg)'
+      style.marginTop = '64px'
+    } else {
+      style.marginLeft = '10px'
+    }
+
+    return style
   }
 
   render() {
-    let {texture, projected, offset, greyscale, sealevel, level, pending, seed, iterations, width, randWidth} = this.state
+    let {texture, projected, offset, greyscale, sealevel, level, pending, collapsed} = this.state
 
     return (
       <div>
-        <div>
-          <h2>Generation</h2>
-          <form onSubmit={this.generate.bind(this)} >
-            Seed: <input type="number" value={seed} onChange={(e) => {this.setState({seed: parseInt(e.target.value)})}} />
-            Iterations: <input type="number" value={iterations} onChange={(e) => {this.setState({iterations: parseInt(e.target.value)})}} />
-            Random width ? <input type="checkbox" selected={randWidth} onClick={() => {this.setState({randWidth: !randWidth})}}/>
-            Width: <input disabled={randWidth} type="number" min={90} max={270} value={width} onChange={(e) => {this.setState({width: parseInt(e.target.value)})}} />
-            <br />
-            <button disabled={pending} type="submit">{pending ? 'Loading...' : 'Generate!'}</button>
-          </form>
-          <br />
-          <h2>Rendering</h2>
-          <div style={{float: 'right'}}>
-            Sea level ({sealevel}%)
-            <Slider disabled={greyscale} level={sealevel} onChange={this.onSealevelChange.bind(this)} />
-          </div>
-          Project? <input type="checkbox" selected={projected} onClick={() => {this.setState({projected: !projected})}}/>
-          Offset <input type="number" value={offset} min={-10} max={360} step={10} onChange={this.onOffsetChange.bind(this)} />
-          Greyscale? <input type="checkbox" selected={greyscale} onClick={this.onGreyScaleToggle.bind(this)}/>
-        </div>
-        {
-          texture ? <World width={800} height={600} texture={texture} projected={projected}/> : <div>Loading</div>
-        }
+        <Layout>
+          <Sider collapsible
+            collapsed={collapsed}
+            onCollapse={collapsed => this.setState({collapsed})}
+          >
+            <Avatar src="/assets/world.png" size="large" style={{margin: '12px'}} />
+            <h2 style={this.titleStyle(collapsed)}>Generation</h2>
+            {
+              !collapsed ? (
+                <div style={{marginLeft: '10px', marginRight: '10px'}}>
+                  <GenerationForm onSubmit={this.generate.bind(this)} pending={pending}/>
+                </div>
+              ) : null
+            }
+          </Sider>
+          <Layout>
+            <Header>
+              <h2>Rendering</h2>
+            </Header>
+            <Content>
+              <RenderForm onChange={this.onRenderOptionChange.bind(this)} />
+              {
+                texture ? <World width={800} height={400} texture={texture} projected={projected}/> : <div>Loading</div>
+              }
+            </Content>
+            <Footer>
+            </Footer>
+          </Layout>
+        </Layout>
       </div>
     )
   }
 }
 
 export default App
+
+/*
+<div style={{float: 'right'}}>
+  Sea level ({sealevel}%)
+  <Slider disabled={greyscale} level={sealevel} onChange={this.onSealevelChange.bind(this)} />
+</div>
+Project? <input type="checkbox" selected={projected} onClick={() => {this.setState({projected: !projected})}}/>
+Offset <input type="number" value={offset} min={-10} max={360} step={10} onChange={this.onOffsetChange.bind(this)} />
+Greyscale? <input type="checkbox" selected={greyscale} onClick={this.onGreyScaleToggle.bind(this)}/>
+*/

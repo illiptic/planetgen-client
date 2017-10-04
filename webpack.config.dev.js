@@ -23,8 +23,11 @@ module.exports = {
       include: path.join(__dirname, 'src')
     }, {
       test: /\.less$/,
-      loaders: ['style-loader', 'css-loader', 'less-loader'],
-      include: path.join(__dirname, 'src')
+      loaders: [
+        'style-loader',
+        'css-loader',
+        'less-loader?modules'],
+      include: [path.join(__dirname, 'src'), path.resolve(__dirname, 'node_modules')]
     }]
   }
 };
