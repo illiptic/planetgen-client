@@ -17,11 +17,12 @@ class RenderForm extends Component {
     const { getFieldDecorator, getFieldValue } = this.props.form
 
     return (
-      <Form layout="horizontal" style={{margin: '20px'}}>
+      <Form layout="horizontal" style={{margin: '20px', width: '740px'}}>
         <Row>
           <Col span={12}>
             <FormItem labelCol={{span: 6}} wrapperCol={{span: 12}} label="Projection">
               {getFieldDecorator('projected', {
+                valuePropName: 'checked',
                 initialValue: true
               })(
                 <Switch checkedChildren="Surface" unCheckedChildren="Sphere" />
@@ -50,7 +51,9 @@ class RenderForm extends Component {
         <Row>
           <Col>
             <FormItem labelCol={{span: 3}} wrapperCol={{span: 21}} label="Sealevel">
-              {getFieldDecorator('sealevel')(
+              {getFieldDecorator('sealevel', {
+                initialValue: 60
+              })(
                 <Slider min={0} max={100} marks={{0: '0%', 50: '50%', 60: '60%', 100: '100%' }}/>
               )}
             </FormItem>
