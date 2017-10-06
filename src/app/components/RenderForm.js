@@ -17,7 +17,7 @@ class RenderForm extends Component {
     const { getFieldDecorator, getFieldValue } = this.props.form
 
     return (
-      <Form layout="horizontal" style={{margin: '20px', width: '740px'}}>
+      <Form layout="horizontal" className="render-form" style={{margin: '20px 20px 0', width: '740px'}}>
         <Row>
           <Col span={12}>
             <FormItem labelCol={{span: 6}} wrapperCol={{span: 12}} label="Projection">
@@ -39,17 +39,12 @@ class RenderForm extends Component {
             </FormItem>
           </Col>
         </Row>
-        <Row>
-          <Col>
             <FormItem labelCol={{span: 3}} wrapperCol={{span: 21}} label="Offset">
               {getFieldDecorator('offset')(
                 <Slider disabled={!getFieldValue('projected')} min={0} max={360} marks={{0: '0°', 360: '360°'}} included={false}/>
               )}
             </FormItem>
-          </Col>
-        </Row>
-        <Row>
-          <Col>
+
             <FormItem labelCol={{span: 3}} wrapperCol={{span: 21}} label="Sealevel">
               {getFieldDecorator('sealevel', {
                 initialValue: 60
@@ -57,8 +52,6 @@ class RenderForm extends Component {
                 <Slider min={0} max={100} marks={{0: '0%', 50: '50%', 60: '60%', 100: '100%' }}/>
               )}
             </FormItem>
-          </Col>
-        </Row>
       </Form>
     )
   }

@@ -1,6 +1,5 @@
-export function save (config) {
-  let configs = JSON.parse(localStorage.getItem('configs') || '[]')
-  configs.push(config)
+
+export function save (configs) {
   localStorage.setItem('configs', JSON.stringify(configs))
 }
 

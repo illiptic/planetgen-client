@@ -1,17 +1,18 @@
 import React, { Component } from 'react'
-import { Form, Button, Input, InputNumber, Switch, Menu, Dropdown, Icon } from 'antd'
+import { Form, Button, Input, InputNumber, Switch, Menu, Dropdown, Icon, Table, Popconfirm, Modal } from 'antd'
 const FormItem = Form.Item
 
 import _ from 'lodash'
 
-import { load as loadConfigs, save as saveConfig } from '../services/persist.js'
+import { load as loadConfigs, save as saveConfigs } from '../services/persist.js'
 
 class GenerationForm extends Component {
   constructor (props) {
     super(props)
     this.state = {
       configs: [],
-      varyWidth: false
+      varyWidth: false,
+      visible: false
     }
   }
 
@@ -20,26 +21,31 @@ class GenerationForm extends Component {
   }
 
   save () {
+    let {configs} = this.state
     let {seed, iterations, width} = this.props.form.getFieldsValue(['seed', 'iterations', 'width'])
     width = this.state.varyWidth ? 'random' : width
 
     let id = [seed,iterations,width].join('-')
 
-    if (_.some(loadConfigs(), {id})) {
-      console.log('already saved')
-    } else {
-      saveConfig({id ,seed, iterations, width, timestamp: (new Date()).toISOString()})
-      this.setState({configs: loadConfigs()})
-    }
+    configs.push({id ,seed, iterations, width, timestamp: (new Date()).toISOString()})
+    saveConfigs(configs)
+    this.setState({configs})
   }
 
-  reload (e) {
-    let {seed, iterations, width} = e.item.props
+  delete (config) {
+    let {configs} = this.state
+    configs = _.reject(configs, {id: config.id})
+    saveConfigs(configs)
+    this.setState({configs})
+  }
+
+  reload (config, e) {
+    let {seed, iterations, width} = config
     if (width === 'random') {
-      this.setState({varyWidth: true})
+      this.setState({varyWidth: true, visible: false})
       this.props.form.setFieldsValue({seed, iterations})
     } else {
-      this.setState({varyWidth: false})
+      this.setState({varyWidth: false, visible: false})
       this.props.form.setFieldsValue({seed, iterations, width})
     }
     this.onSubmit()
@@ -65,6 +71,12 @@ class GenerationForm extends Component {
     const { getFieldDecorator, getFieldsValue } = this.props.form
     let { varyWidth, configs } = this.state
 
+    let configSaved = () => {
+      let currentConfig = getFieldsValue(['seed', 'iterations', 'width'])
+      currentConfig.width = varyWidth ? 'random' : currentConfig.width
+      return _.some(configs, currentConfig)
+    }
+
     return (
       <Form onSubmit={this.onSubmit.bind(this)} layout="vertical">
         <FormItem label="Seed">
@@ -87,7 +99,7 @@ class GenerationForm extends Component {
             <InputNumber min={10} max={10000} style={{width: '100%'}} />
           )}
         </FormItem>
-        <Switch checkedChildren="Varying" unCheckedChildren="Fixed" value={varyWidth} onChange={this.onSwitch.bind(this)} style={{float:'right',zIndex: 2}} />
+        <Switch checkedChildren="Varying" unCheckedChildren="Fixed" checked={varyWidth} onChange={this.onSwitch.bind(this)} style={{float:'right',zIndex: 2}} />
         <FormItem label="Width">
           {getFieldDecorator('width', {
             initialValue: 180
@@ -99,25 +111,35 @@ class GenerationForm extends Component {
           <Button disabled={pending} type="primary" htmlType="submit" loading={pending}>{pending ? 'Loading' : 'Generate'}</Button>
         </FormItem>
         <FormItem>
-          <Button onClick={this.save.bind(this)}> Save configuration</Button>
+          <Button disabled={configSaved()} onClick={this.save.bind(this)}> Save configuration</Button>
         </FormItem>
         <FormItem>
-          <Dropdown overlay={(
-            <Menu onClick={this.reload.bind(this)}>
-              { configs && configs.map((props) => (
-                <Menu.Item key={props.id} {...props}>{props.seed} - {props.iterations} - {props.width} </Menu.Item>
-              ))}
-            </Menu>
-          )}>
-            <a href="#">
-              Reload a configuration <Icon type="down" />
-            </a>
-          </Dropdown>
+          <Button onClick={() => this.setState({visible: true})}>Load configuration</Button>
+          <Modal
+            title="Load configuration"
+            visible={this.state.visible}
+            onCancel={() => this.setState({visible: false})}
+            footer={<Button onClick={() => this.setState({visible: false})}>Close</Button>}
+          >
+            <Table locale={{emptyText: 'No saved configurations'}} rowKey="id" pagination={false} bordered size="small" scroll={{y: '200px'}} showHeader={false} dataSource={configs} columns={[{
+              dataIndex: 'id',
+              key: 'id',
+              onCellClick: this.reload.bind(this),
+              render: (id, config) => [config.seed, config.iterations, config.width].join(' - '),
+            }, {
+              key: 'action',
+              width: '30px',
+              render: (text, record) => (
+                <Popconfirm title="Delete this configuration?" onConfirm={this.delete.bind(this, record)} okText="Yes" cancelText="No">
+                  <Button type="danger" icon="delete" shape="circle" size="small" />
+                </Popconfirm>
+              ),
+            }]} />
+          </Modal>
         </FormItem>
       </Form>
     )
   }
-
 }
 
 export default Form.create()(GenerationForm)
