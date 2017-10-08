@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import {DataTexture, RGBFormat, UnsignedByteType} from 'three'
+import {DataTexture, RGBAFormat, UnsignedByteType} from 'three'
 import { Layout, Button, Avatar } from 'antd'
 const { Header, Content, Footer, Sider } = Layout
 
@@ -58,17 +58,20 @@ class App extends Component{
     let h = _.keys(map).length
     let w = _.keys(map[0]).length
 
-    let data = new Uint8Array(h*w*3)
+    const pixelChanels = 4
+    let data = new Uint8Array(h * w * pixelChanels)
 
     let color = this.colorGen(low, high, sealevel, greyscale)
     _.forEach(map, (T, p) => {
       let rowIndex = p * w
       _.forEach(T, (v, t) => {
-        let idx = (rowIndex + ((t + offset) % w))*3;
+        let idx = (rowIndex + ((t + offset) % w)) * pixelChanels;
         [data[idx], data[idx+1], data[idx+2]] = color(v)
+        data[idx+3] = 255 // alpha
       })
     })
-    let texture = new DataTexture(data, w, h, RGBFormat, UnsignedByteType)
+    let texture = new DataTexture(data, w, h, RGBAFormat, UnsignedByteType)
+    texture.flipY = true
     texture.needsUpdate = true
     return texture
   }
@@ -124,7 +127,7 @@ class App extends Component{
             {
               !collapsed ? (
                 <div style={{marginLeft: '10px', marginRight: '10px'}}>
-                  <GenerationForm onSubmit={this.generate.bind(this)} pending={pending}/>
+                  <GenerationForm onSubmit={this.generate.bind(this)} onRenderOptionChange={this.onRenderOptionChange.bind(this)} pending={pending} texture={texture} offset={offset} sealevel={sealevel} greyscale={greyscale}/>
                 </div>
               ) : null
             }
@@ -134,7 +137,7 @@ class App extends Component{
               <h2>Rendering</h2>
             </Header>
             <Content>
-              <RenderForm onChange={this.onRenderOptionChange.bind(this)} />
+              <RenderForm onChange={this.onRenderOptionChange.bind(this)} offset={offset} sealevel={sealevel} greyscale={greyscale}/>
               {
                 texture ? <World width={800} height={400} texture={texture} projected={projected}/> : <div>Loading</div>
               }

@@ -33,9 +33,9 @@ class World extends Component{
     let {height, width, projected, texture} = this.props
     let {dragging, rotation} = this.state
 
-    let cameraprops = {fov : 54, aspect : width/height,
+    let cameraprops = {fov : 50, aspect : width/height,
                        near : 1, far : 5000,
-                       position : new Vector3(0,0,600),
+                       position : new Vector3(0,0,650),
                        lookat : new Vector3(0,0,0)}
 
     return (

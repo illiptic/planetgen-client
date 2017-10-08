@@ -11,6 +11,13 @@ import _ from 'lodash'
 function onFieldsChange (props, changedFields) {
   props.onChange(_.mapValues(changedFields, field => field.value))
 }
+function mapPropsToFields (props) {
+  let maps =  _.mapValues(props, p => {
+    return {value: p}
+  })
+  console.log(props, maps)
+  return maps
+}
 
 class RenderForm extends Component {
   render () {
@@ -57,4 +64,4 @@ class RenderForm extends Component {
   }
 }
 
-export default Form.create({onFieldsChange})(RenderForm)
+export default Form.create({onFieldsChange, mapPropsToFields})(RenderForm)

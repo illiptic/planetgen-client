@@ -20,14 +20,23 @@ class GenerationForm extends Component {
     this.setState({configs: loadConfigs()})
   }
 
+  getTextureMiniature () {
+    let {texture} = this.props
+    let cvs = document.createElement('canvas')
+    let ctx = cvs.getContext('2d')
+    ctx.putImageData(new ImageData(Uint8ClampedArray.from(texture.image.data), texture.image.width, texture.image.height), 0, 0)
+    return cvs.toDataURL()
+  }
+
   save () {
     let {configs} = this.state
+    let {offset, sealevel, greyscale} = this.props
     let {seed, iterations, width} = this.props.form.getFieldsValue(['seed', 'iterations', 'width'])
     width = this.state.varyWidth ? 'random' : width
 
-    let id = [seed,iterations,width].join('-')
+    let id = [seed, iterations, width, offset, sealevel, greyscale].join('-')
 
-    configs.push({id ,seed, iterations, width, timestamp: (new Date()).toISOString()})
+    configs.push({id, seed, iterations, width, offset, sealevel, greyscale, timestamp: (new Date()).toISOString(), preview: this.getTextureMiniature()})
     saveConfigs(configs)
     this.setState({configs})
   }
@@ -40,7 +49,7 @@ class GenerationForm extends Component {
   }
 
   reload (config, e) {
-    let {seed, iterations, width} = config
+    let {seed, iterations, width, offset, sealevel, greyscale} = config
     if (width === 'random') {
       this.setState({varyWidth: true, visible: false})
       this.props.form.setFieldsValue({seed, iterations})
@@ -48,6 +57,7 @@ class GenerationForm extends Component {
       this.setState({varyWidth: false, visible: false})
       this.props.form.setFieldsValue({seed, iterations, width})
     }
+    this.props.onRenderOptionChange({offset, sealevel, greyscale})
     this.onSubmit()
   }
 
@@ -67,12 +77,12 @@ class GenerationForm extends Component {
   }
 
   render() {
-    const { pending } = this.props
+    const { pending, offset, sealevel, greyscale } = this.props
     const { getFieldDecorator, getFieldsValue } = this.props.form
     let { varyWidth, configs } = this.state
 
     let configSaved = () => {
-      let currentConfig = getFieldsValue(['seed', 'iterations', 'width'])
+      let currentConfig = _.merge({offset, sealevel, greyscale}, getFieldsValue(['seed', 'iterations', 'width']))
       currentConfig.width = varyWidth ? 'random' : currentConfig.width
       return _.some(configs, currentConfig)
     }
@@ -124,8 +134,13 @@ class GenerationForm extends Component {
             <Table locale={{emptyText: 'No saved configurations'}} rowKey="id" pagination={false} bordered size="small" scroll={{y: '200px'}} showHeader={false} dataSource={configs} columns={[{
               dataIndex: 'id',
               key: 'id',
+              onCellClick: this.reload.bind(this)
+            }, {
+              dataIndex: 'preview',
+              key: 'preview',
+              width: '100px',
               onCellClick: this.reload.bind(this),
-              render: (id, config) => [config.seed, config.iterations, config.width].join(' - '),
+              render: (data) => <img height="45" src={data} />
             }, {
               key: 'action',
               width: '30px',
