@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import {DataTexture, RGBAFormat, UnsignedByteType} from 'three'
-import { Layout, Button, Avatar } from 'antd'
+import { Layout, Button, Avatar, Spin } from 'antd'
 const { Header, Content, Footer, Sider } = Layout
 
 import _ from 'lodash'
@@ -40,6 +40,7 @@ class App extends Component{
     } else {
 
       let seabound = sealevel/100
+      let deepsea = seabound - 0.05
       let beachbound = seabound + 0.03
 
       return (v) => {
@@ -47,6 +48,7 @@ class App extends Component{
         if (ratio > 0.92) { return [255, 255, 255] } // white
         else if (ratio > 0.8) { return [50, 50, 50] } // grey
 
+        else if (ratio < deepsea) { return [0, 100, 250] } // deepblue
         else if (ratio < seabound) { return [0, 120, 255] } // blue
         else if (ratio < beachbound) { return [230, 230, 40] } // yellow
         else { return [0, 255, 30] } // green
@@ -76,11 +78,11 @@ class App extends Component{
     return texture
   }
 
-  generate ({seed, iterations, width}) {
+  generate ({seed, iterations, width, smoothing}) {
     let {pending, offset, sealevel, greyscale} = this.state
     if (!pending) {
       this.setState({pending: true})
-      getMap({seed, iterations, width}).then(result => {
+      getMap({seed, iterations, width, smoothing}).then(result => {
         let texture = this.createTexture(result, offset, sealevel, greyscale)
         this.setState({map: result.map, texture, low: result.low, high: result.high, pending: false})
       })
@@ -137,10 +139,12 @@ class App extends Component{
               <h2>Rendering</h2>
             </Header>
             <Content>
-              <RenderForm onChange={this.onRenderOptionChange.bind(this)} offset={offset} sealevel={sealevel} greyscale={greyscale}/>
-              {
-                texture ? <World width={800} height={400} texture={texture} projected={projected}/> : <div>Loading</div>
-              }
+              <Spin spinning={pending || !texture}>
+                <RenderForm onChange={this.onRenderOptionChange.bind(this)} offset={offset} sealevel={sealevel} greyscale={greyscale}/>
+                {
+                  texture ? <World width={800} height={400} texture={texture} projected={projected}/> : <div>Loading</div>
+                }
+              </Spin>
             </Content>
             <Footer>
             </Footer>

@@ -31,12 +31,12 @@ class GenerationForm extends Component {
   save () {
     let {configs} = this.state
     let {offset, sealevel, greyscale} = this.props
-    let {seed, iterations, width} = this.props.form.getFieldsValue(['seed', 'iterations', 'width'])
+    let {seed, iterations, width, smoothing} = this.props.form.getFieldsValue(['seed', 'iterations', 'width', 'smoothing'])
     width = this.state.varyWidth ? 'random' : width
 
-    let id = [seed, iterations, width, offset, sealevel, greyscale].join('-')
+    let id = [seed, iterations, width, smoothing, offset, sealevel, greyscale].join('-')
 
-    configs.push({id, seed, iterations, width, offset, sealevel, greyscale, timestamp: (new Date()).toISOString(), preview: this.getTextureMiniature()})
+    configs.push({id, seed, iterations, width, smoothing, offset, sealevel, greyscale, timestamp: (new Date()).toISOString(), preview: this.getTextureMiniature()})
     saveConfigs(configs)
     this.setState({configs})
   }
@@ -49,13 +49,13 @@ class GenerationForm extends Component {
   }
 
   reload (config, e) {
-    let {seed, iterations, width, offset, sealevel, greyscale} = config
+    let {seed, iterations, width, smoothing, offset, sealevel, greyscale} = config
     if (width === 'random') {
       this.setState({varyWidth: true, visible: false})
-      this.props.form.setFieldsValue({seed, iterations})
+      this.props.form.setFieldsValue({seed, iterations, smoothing})
     } else {
       this.setState({varyWidth: false, visible: false})
-      this.props.form.setFieldsValue({seed, iterations, width})
+      this.props.form.setFieldsValue({seed, iterations, width, smoothing})
     }
     this.props.onRenderOptionChange({offset, sealevel, greyscale})
     this.onSubmit()
@@ -115,6 +115,13 @@ class GenerationForm extends Component {
             initialValue: 180
           })(
             <InputNumber disabled={varyWidth} min={90} max={270} style={{width: '100%'}} />
+          )}
+        </FormItem>
+        <FormItem label="Smoothing">
+          {getFieldDecorator('smoothing', {
+            initialValue: 0
+          })(
+            <InputNumber min={0} max={3} style={{width: '100%'}} />
           )}
         </FormItem>
         <FormItem>

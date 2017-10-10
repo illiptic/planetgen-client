@@ -15,7 +15,6 @@ function mapPropsToFields (props) {
   let maps =  _.mapValues(props, p => {
     return {value: p}
   })
-  console.log(props, maps)
   return maps
 }
 
